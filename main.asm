@@ -1,4 +1,5 @@
-INCLUDE "core/hardware.inc"
+;INCLUDE "core/hardware.inc"
+INCLUDE "core/constants.asm"
 
 SECTION "Header", ROM0[$100]
 	nop
@@ -31,49 +32,16 @@ EntryPoint:
 
 	; Do not turn the LCD off outside of VBlank
 WaitVBlank:
-	ld a, [rLY]
+	ld a, [rLCDC_Y_COORD]
 	cp 144
 	jp c, WaitVBlank
 
 	; Turn the LCD off
 	ld a, 0
-	ld [rLCDC], a
+	ld [rLCD_CONTROL], a
 
-LoadCharacters::
-	; Copy the tile data
-	ld de, Character1Tiles
-	ld hl, $9000
-	ld bc, Character1TilesEnd - Character1Tiles
-  .CopyTiles1:
-	ld a, [de]
-	ld [hl+], a
-	inc de
-	dec bc
-	ld a, b
-	or a, c
-	jp nz, .CopyTiles1
-
-	; Copy the tilemap
-	ld de, Character1
-	ld hl, $9800
-	ld bc, Character1End - Character1
-  .CopyCharacter1:
-	ld a, [de]
-	ld [hl+], a
-	inc de
-	dec bc
-	ld a, b
-	or a, c
-	jp nz, .CopyCharacter1
-
-
-	; Turn the LCD on
-	ld a, LCDCF_ON | LCDCF_BGON
-	ld [rLCDC], a
-
-	; During the first (blank) frame, initialize display registers
-	ld a, %11100100
-	ld [rBGP], a
+INCLUDE "src/character_selection.asm"
+; TODO call character selection instead of just including
 
 Done:
 	jp Done
@@ -81,9 +49,9 @@ Done:
 
 SECTION "Tile Data", ROM0
 
-INCLUDE "assets/tales_tiles.asm"
+INCLUDE "assets/map/tales_tiles.asm"
 
 SECTION "TileMap", ROM0
 
-INCLUDE "assets/character1.asm"
+INCLUDE "assets/character_selection/character1.asm"
 ;INCLUDE "assets/floatlandmap.asm"
